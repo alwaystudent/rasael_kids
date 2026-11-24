@@ -10,6 +10,7 @@ import {
   Newspaper,
   Star,
   Trophy,
+  User,
   Volume2,
   VolumeX,
   X,
@@ -27,6 +28,7 @@ interface TopHeaderBarProps {
   onOpenMobileMenu: () => void;
   onNavigate: (sectionId: string) => void;
   onOpenEmailAuth: () => void;
+  onOpenProfile: () => void;
   onSignOut: () => void;
 }
 
@@ -41,6 +43,7 @@ interface SidebarNavProps {
   onStartActivity: () => void;
   onNavigate: (sectionId: string) => void;
   onOpenEmailAuth: () => void;
+  onOpenProfile: () => void;
   onSignOut: () => void;
 }
 
@@ -64,6 +67,7 @@ export function TopHeaderBar({
   onOpenMobileMenu,
   onNavigate,
   onOpenEmailAuth,
+  onOpenProfile,
   onSignOut,
 }: TopHeaderBarProps) {
   return (
@@ -120,16 +124,31 @@ export function TopHeaderBar({
               <span>دخول بالبريد</span>
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 whitespace-nowrap shrink-0 cursor-pointer"
-              title="تسجيل الخروج"
-              aria-label="تسجيل الخروج"
-            >
-              <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
-              <span>تسجيل الخروج</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-emerald-900 transition-colors hover:bg-emerald-100 whitespace-nowrap shrink-0 cursor-pointer"
+                title="الملف الشخصي وإدارة الحساب"
+                aria-label="الملف الشخصي"
+              >
+                <User className="h-3.5 w-3.5 text-emerald-700" aria-hidden="true" />
+                <span className="sm:hidden">ملفي</span>
+                <span className="hidden sm:inline">الملف الشخصي</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 whitespace-nowrap shrink-0 cursor-pointer"
+                title="تسجيل الخروج"
+                aria-label="تسجيل الخروج"
+              >
+                <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
+                <span className="sm:hidden">خروج</span>
+                <span className="hidden sm:inline">تسجيل الخروج</span>
+              </button>
+            </>
           )}
 
           <a
@@ -190,6 +209,7 @@ export function SidebarNav({
   onStartActivity,
   onNavigate,
   onOpenEmailAuth,
+  onOpenProfile,
   onSignOut,
 }: SidebarNavProps) {
   const handleItemClick = (id: string) => {
@@ -279,17 +299,31 @@ export function SidebarNav({
             <span>سجّل بالبريد لحفظ نجومك</span>
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => {
-              onCloseMobile();
-              onSignOut();
-            }}
-            className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 cursor-pointer"
-          >
-            <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
-            <span>تسجيل الخروج</span>
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                onCloseMobile();
+                onOpenProfile();
+              }}
+              className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs font-bold text-emerald-900 transition-colors hover:bg-emerald-100 cursor-pointer"
+            >
+              <User className="h-3.5 w-3.5 text-emerald-700" aria-hidden="true" />
+              <span>الملف الشخصي</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onCloseMobile();
+                onSignOut();
+              }}
+              className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 cursor-pointer"
+            >
+              <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
+              <span>تسجيل الخروج</span>
+            </button>
+          </div>
         )}
 
         <div className="flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/50 px-3.5 py-2.5 text-xs">

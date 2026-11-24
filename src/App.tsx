@@ -39,11 +39,13 @@ import {
 } from './components/StarCelebrationBanner';
 import { SplashScreen } from './components/SplashScreen';
 import { EmailAuthModal } from './components/EmailAuthModal';
+import { ProfileModal } from './components/ProfileModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { WelcomeMemberBanner } from './components/WelcomeMemberBanner';
 import { soundFX } from './utils/soundEffects';
 import { auth, googleProvider } from './firebase/config';
 import {
+  deleteUserAccountData,
   fetchPublicCompetitors,
   fetchUserProgress,
   readCachedCompetitors,
@@ -171,6 +173,7 @@ export default function App() {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   const [emailAuthOpen, setEmailAuthOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [authPromptReason, setAuthPromptReason] = useState<string | null>(null);
   const [welcomeBannerVisible, setWelcomeBannerVisible] = useState(false);
   const [welcomeMemberName, setWelcomeMemberName] = useState('');
@@ -714,6 +717,53 @@ export default function App() {
     scheduleCloudSync(authUser, next);
   };
 
+  const handleSaveProfileName = async (cleanedName: string) => {
+    if (!authUser) return;
+    const prev = progressRef.current;
+    const next: SavedProgress = {
+      ...prev,
+      childName: cleanedName.slice(0, 32),
+    };
+    setProgress(next);
+    writeUserCache(authUser.uid, next);
+    lastSyncedDigestRef.current = '';
+    await syncSnapshotToCloudNow(authUser, next);
+    const freshList = await fetchPublicCompetitors(true).catch(() => null);
+    if (freshList) {
+      setCloudCompetitors(freshList);
+    }
+  };
+
+  const handleDeleteAccountData = async (uid: string) => {
+    if (cloudSyncTimerRef.current) {
+      window.clearTimeout(cloudSyncTimerRef.current);
+      cloudSyncTimerRef.current = null;
+    }
+    if (localSaveTimerRef.current) {
+      window.clearTimeout(localSaveTimerRef.current);
+      localSaveTimerRef.current = null;
+    }
+
+    await deleteUserAccountData(uid);
+
+    try {
+      const safeUid = sanitizeId(uid);
+      localStorage.removeItem(`${USER_CACHE_PREFIX}${safeUid}`);
+      localStorage.removeItem(`${WELCOME_SEEN_PREFIX}${safeUid}`);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const handleAccountDeleted = () => {
+    setProfileModalOpen(false);
+    setProgress(DEFAULT_PROGRESS);
+    setWelcomeBannerVisible(false);
+    lastSyncedDigestRef.current = '';
+    setCloudCompetitors(readCachedCompetitors());
+    setAuthNotice('تم حذف حسابك وجميع بياناتك بنجاح.');
+  };
+
   return (
     <div
       dir="rtl"
@@ -736,6 +786,7 @@ export default function App() {
         onOpenMobileMenu={() => setMobileMenuOpen(true)}
         onNavigate={(id) => setActiveSection(id)}
         onOpenEmailAuth={() => openEmailAuth()}
+        onOpenProfile={() => setProfileModalOpen(true)}
         onSignOut={handleSignOut}
       />
 
@@ -752,6 +803,7 @@ export default function App() {
           onStartActivity={() => handleLaunchActivity(activeEngine)}
           onNavigate={(id) => setActiveSection(id)}
           onOpenEmailAuth={() => openEmailAuth()}
+          onOpenProfile={() => setProfileModalOpen(true)}
           onSignOut={handleSignOut}
         />
 
@@ -1104,6 +1156,18 @@ export default function App() {
             }}
             isGoogleLoading={isAuthLoading}
             promptReason={authPromptReason}
+          />
+
+          <ProfileModal
+            open={profileModalOpen}
+            user={authUser}
+            childName={progress.childName}
+            stars={progress.stars}
+            completedCount={progress.completedIds.length}
+            onClose={() => setProfileModalOpen(false)}
+            onSaveProfileName={handleSaveProfileName}
+            onDeleteAccountData={handleDeleteAccountData}
+            onAccountDeleted={handleAccountDeleted}
           />
 
           <footer className="border-t border-slate-200 bg-slate-50 py-6 no-print">

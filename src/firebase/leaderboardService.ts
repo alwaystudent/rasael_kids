@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -321,5 +322,47 @@ export async function saveUserProgress(
       exists ? OperationType.UPDATE : OperationType.CREATE,
       path
     );
+  }
+}
+
+/**
+ * Deletes all Firestore records belonging to the authenticated user (their private
+ * progress document and all public leaderboard entries they own) and cleans local caches.
+ */
+export async function deleteUserAccountData(uid: string): Promise<void> {
+  const safeUid = sanitizeId(uid);
+  const compPath = 'competitors';
+  const userPath = `users/${safeUid}`;
+
+  const deletedCompIds = new Set<string>();
+
+  try {
+    const q = query(
+      collection(db, compPath),
+      where('ownerUid', '==', safeUid)
+    );
+    const snapshot = await getDocs(q);
+    for (const docSnap of snapshot.docs) {
+      await deleteDoc(docSnap.ref);
+      deletedCompIds.add(docSnap.id);
+      knownExistingCompetitorIds.delete(docSnap.id);
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, compPath);
+  }
+
+  try {
+    await deleteDoc(doc(db, 'users', safeUid));
+    knownExistingUserIds.delete(safeUid);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, userPath);
+  }
+
+  const cached = readCachedCompetitors();
+  if (cached.length > 0) {
+    const filtered = cached.filter(
+      (item) => item.ownerUid !== uid && item.ownerUid !== safeUid && !deletedCompIds.has(item.id)
+    );
+    writeCachedCompetitors(filtered);
   }
 }

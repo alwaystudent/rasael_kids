@@ -129,7 +129,8 @@ service cloud.firestore {
     match /competitors/{competitorId} {
       allow get: if isValidId(competitorId)
         && ((resource == null && isSignedIn()) || (resource != null && existing().isPublic == true));
-      allow list: if resource.data.isPublic == true;
+      allow list: if resource.data.isPublic == true
+        || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
 
       allow create: if isSignedIn()
         && isValidId(competitorId)
@@ -156,8 +157,7 @@ service cloud.firestore {
       allow delete: if isSignedIn()
         && isValidId(competitorId)
         && resource != null
-        && existing().ownerUid == request.auth.uid
-        && existing().kind == 'companion';
+        && existing().ownerUid == request.auth.uid;
     }
 
     match /users/{userId} {
@@ -186,7 +186,7 @@ service cloud.firestore {
           'updatedAt'
         ]);
 
-      allow delete: if false;
+      allow delete: if isValidId(userId) && isOwner(userId);
     }
   }
 }
