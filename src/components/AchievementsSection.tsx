@@ -179,72 +179,90 @@ export function AchievementsSection({
             {/* Child-Friendly Festive Certificate Canvas (A4 Landscape 297:210) */}
             <div
               style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
-              className="certificate-a4-landscape lg:col-span-8 relative flex flex-col overflow-hidden rounded-3xl border-4 border-amber-300 bg-gradient-to-br from-amber-100/90 via-emerald-50 to-sky-100/90 p-2.5 sm:aspect-[297/210] sm:p-3.5 shadow-md print:shadow-none"
+              className="certificate-a4-landscape lg:col-span-8 relative flex flex-col overflow-hidden rounded-3xl border-4 border-amber-300 bg-gradient-to-br from-amber-100 via-emerald-50 to-sky-100 p-2.5 sm:aspect-[297/210] sm:p-3.5 shadow-md print:shadow-none"
             >
-              <div className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[20px] border-2 border-dashed border-emerald-500/45 bg-[#FFFDF7] px-5 py-4 sm:px-8 sm:py-5 text-center">
-                {/* Subtle Corner Decorative Stars */}
-                <Star
-                  className="pointer-events-none absolute right-4 top-4 h-5 w-5 fill-amber-300 text-amber-400 opacity-80"
+              <div
+                style={{
+                  backgroundImage:
+                    'radial-gradient(rgba(245, 158, 11, 0.14) 1.2px, transparent 1.2px)',
+                  backgroundSize: '20px 20px',
+                }}
+                className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[20px] border-2 border-dashed border-emerald-500/50 bg-[#FFFDF7] px-4 py-3.5 sm:px-7 sm:py-4 text-center"
+              >
+                {/* Playful Corner Decorative Clusters */}
+                <div
                   aria-hidden="true"
-                />
-                <Star
-                  className="pointer-events-none absolute left-4 top-4 h-5 w-5 fill-sky-300 text-sky-400 opacity-80"
+                  className="pointer-events-none absolute right-3 top-3 flex items-center gap-1 opacity-85"
+                >
+                  <Star className="h-5 w-5 fill-amber-300 text-amber-500" />
+                  <Sparkles className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div
                   aria-hidden="true"
-                />
-                <Sparkles
-                  className="pointer-events-none absolute bottom-4 right-5 h-5 w-5 text-emerald-400 opacity-75"
+                  className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 opacity-85"
+                >
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  <Star className="h-5 w-5 fill-sky-300 text-sky-500" />
+                </div>
+                <div
                   aria-hidden="true"
-                />
-                <Sparkles
-                  className="pointer-events-none absolute bottom-4 left-5 h-5 w-5 text-amber-400 opacity-75"
+                  className="pointer-events-none absolute bottom-10 right-3 flex items-center gap-1 opacity-75"
+                >
+                  <Star className="h-4 w-4 fill-emerald-300 text-emerald-500" />
+                </div>
+                <div
                   aria-hidden="true"
-                />
+                  className="pointer-events-none absolute bottom-10 left-3 flex items-center gap-1 opacity-75"
+                >
+                  <Star className="h-4 w-4 fill-rose-300 text-rose-400" />
+                </div>
 
-                {/* Top Header: Celebration Bunting + Platform Logo + Certificate Heading */}
+                {/* Top Header: Wide Celebration Bunting + Logo + Title */}
                 <div>
                   <svg
-                    viewBox="0 0 600 36"
+                    viewBox="0 0 700 32"
                     aria-hidden="true"
-                    className="pointer-events-none mx-auto -mt-3 mb-1 h-7 w-full max-w-lg"
+                    className="pointer-events-none mx-auto -mt-3 mb-1 h-6 w-full max-w-2xl"
                     fill="none"
                   >
                     <path
-                      d="M10 4 Q300 26 590 4"
+                      d="M10 3 Q350 24 690 3"
                       stroke="#D97706"
                       strokeWidth="2"
                       strokeDasharray="4 4"
                     />
-                    <polygon points="55,9 85,12 66,30" fill="#10B981" />
-                    <polygon points="125,13 155,16 138,33" fill="#F59E0B" />
-                    <polygon points="195,16 225,17 209,35" fill="#0EA5E9" />
-                    <polygon points="285,17 315,17 300,35" fill="#F43F5E" />
-                    <polygon points="375,17 405,16 391,35" fill="#0EA5E9" />
-                    <polygon points="445,16 475,13 462,33" fill="#F59E0B" />
-                    <polygon points="515,12 545,9 534,30" fill="#10B981" />
+                    <polygon points="45,7 75,10 56,27" fill="#10B981" />
+                    <polygon points="120,11 150,14 133,30" fill="#F59E0B" />
+                    <polygon points="200,14 230,15 214,31" fill="#0EA5E9" />
+                    <polygon points="285,15 315,15 300,32" fill="#F43F5E" />
+                    <polygon points="370,15 400,15 385,32" fill="#8B5CF6" />
+                    <polygon points="455,15 485,14 470,31" fill="#0EA5E9" />
+                    <polygon points="535,14 565,11 551,30" fill="#F59E0B" />
+                    <polygon points="615,10 645,7 632,27" fill="#10B981" />
                   </svg>
 
                   <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3.5">
-                    <div className="rounded-2xl border-2 border-amber-200 bg-white p-1 shadow-xs">
-                      <PlatformLogo size={48} />
+                    <div className="rounded-2xl border-2 border-amber-300 bg-white p-1 shadow-xs">
+                      <PlatformLogo size={46} />
                     </div>
                     <div className="text-center sm:text-right">
                       <p className="text-[11px] font-bold text-amber-700">
-                        منصة رسائل إماراتية للأطفال · إصدار 2026
+                        منصة رسائل إماراتية للأطفال · شهادة إنجاز رسمية
                       </p>
-                      <h4 className="font-display text-lg font-extrabold text-emerald-900 sm:text-xl leading-tight">
+                      <h4 className="font-display text-lg font-extrabold text-emerald-950 sm:text-xl leading-tight">
                         شهادة تقدير وتشجيع للبطل المبدع
                       </h4>
                     </div>
                   </div>
                 </div>
 
-                {/* Middle Spotlight: Child Name Ribbon + Appreciation Message */}
-                <div className="my-2 space-y-2.5">
-                  <div className="mx-auto max-w-md rounded-2xl border-2 border-amber-300 bg-gradient-to-l from-amber-50 via-white to-emerald-50 px-5 py-2.5 shadow-xs">
+                {/* Full-Width Spotlight Name Ribbon + Appreciation Message */}
+                <div className="my-1.5 space-y-2">
+                  <div className="mx-auto w-full max-w-2xl rounded-2xl border-2 border-amber-300 bg-gradient-to-l from-amber-50 via-white to-emerald-50 px-5 py-2 shadow-xs">
                     <p className="text-[11px] font-semibold text-slate-500">
-                      تُمنح هذه الشهادة بكل فخر إلى
+                      تُمنح هذه الشهادة بكل فخر واعتزاز إلى البطل
                     </p>
-                    <div className="mt-0.5 flex items-center justify-center gap-2.5">
+                    <div className="mt-0.5 flex items-center justify-center gap-3">
                       <Star
                         className="h-5 w-5 shrink-0 fill-amber-400 text-amber-500"
                         aria-hidden="true"
@@ -259,14 +277,42 @@ export function AchievementsSection({
                     </div>
                   </div>
 
-                  <p className="mx-auto max-w-xl text-xs sm:text-sm leading-relaxed text-slate-700">
-                    تقديراً لمشاركته الرائعة في مغامرات الآداب النبوية، السيرة العطرة، تدبر قصار السور، والمواظبة على الأذكار اليومية.
+                  <p className="mx-auto max-w-2xl text-xs sm:text-[13px] leading-relaxed text-slate-700">
+                    تقديراً لمشاركته المتميزة وتفاعله الجميل في رحلة تعلّم الآداب النبوية، السيرة العطرة، تدبر قصار السور، والمواظبة على الأذكار اليومية.
                   </p>
                 </div>
 
-                {/* Landscape Dual Row: Medal Crest + 5-Star Celebration */}
-                <div className="mx-auto grid w-full max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  <div className="flex items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5">
+                {/* Full-Width 4-Series Accomplishment Tiles (Fills Landscape Width) */}
+                <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/85 px-2.5 py-1.5">
+                    <p className="text-[10px] font-semibold text-emerald-800">الآداب النبوية</p>
+                    <p className="font-mono text-sm font-extrabold text-emerald-950 tabular-nums">
+                      {etiquetteDone}/{ETIQUETTE_SCENARIOS.length}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-sky-200 bg-sky-50/85 px-2.5 py-1.5">
+                    <p className="text-[10px] font-semibold text-sky-800">السيرة العطرة</p>
+                    <p className="font-mono text-sm font-extrabold text-sky-950 tabular-nums">
+                      {seerahDone}/{SEERAH_MILESTONES.length}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/85 px-2.5 py-1.5">
+                    <p className="text-[10px] font-semibold text-amber-800">الأذكار اليومية</p>
+                    <p className="font-mono text-sm font-extrabold text-amber-950 tabular-nums">
+                      {adhkarDone}/{DAILY_ADHKAR.length}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-rose-200 bg-rose-50/85 px-2.5 py-1.5">
+                    <p className="text-[10px] font-semibold text-rose-800">البرنامج الصيفي</p>
+                    <p className="font-mono text-sm font-extrabold text-rose-950 tabular-nums">
+                      {seasonalDone}/{SEASONAL_CHALLENGES.length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Full-Width Medal Crest + 5-Star Celebration Row */}
+                <div className="mt-2 grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="flex items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-white/90 px-3.5 py-2 shadow-2xs">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400 bg-amber-300 text-amber-950 shadow-xs">
                       <Award className="h-5 w-5" aria-hidden="true" />
                     </div>
@@ -280,7 +326,7 @@ export function AchievementsSection({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center rounded-2xl border border-amber-200 bg-amber-50/60 px-3.5 py-2.5">
+                  <div className="flex flex-col items-center justify-center rounded-2xl border border-amber-200 bg-white/90 px-3.5 py-2 shadow-2xs">
                     <div
                       className="flex items-center justify-center gap-1"
                       aria-label={`${filledBadgesCount} من 5 نجوم تميز`}
@@ -297,17 +343,26 @@ export function AchievementsSection({
                         />
                       ))}
                     </div>
-                    <p className="mt-1 text-[11px] font-bold text-amber-900 tabular-nums">
+                    <p className="mt-0.5 text-[11px] font-bold text-amber-900 tabular-nums">
                       {stars} نجمة مكتسبة · {completedIds.length} نشاطاً مكتملًا
                     </p>
                   </div>
                 </div>
 
-                {/* Bottom Official Seal Strip */}
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t-2 border-dashed border-amber-200 pt-2.5 text-[11px] font-semibold text-slate-600">
-                  <span className="text-emerald-900">موسم السلاسل التعليمية 2026</span>
-                  <span aria-hidden="true" className="text-amber-400">★</span>
-                  <span className="text-sky-900">ختم مشروع رسائل إماراتية للأطفال</span>
+                {/* Bottom Official Seal, Date & Platform Signature Strip */}
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t-2 border-dashed border-amber-300/70 pt-2 text-[11px] font-semibold text-slate-600">
+                  <span className="text-emerald-900">
+                    تاريخ الإصدار:{' '}
+                    {new Intl.DateTimeFormat('ar-AE', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }).format(new Date())}
+                  </span>
+                  <span aria-hidden="true" className="text-amber-500">★</span>
+                  <span className="text-amber-800">إدارة منصة رسائل إماراتية للأطفال</span>
+                  <span aria-hidden="true" className="text-amber-500">★</span>
+                  <span className="text-sky-900">ختم التميز · 2026</span>
                 </div>
               </div>
             </div>
