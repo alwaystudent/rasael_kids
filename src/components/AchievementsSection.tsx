@@ -1,4 +1,4 @@
-import { Lock, Mail, Printer, RotateCcw, Star } from 'lucide-react';
+import { Award, Lock, Mail, Printer, RotateCcw, Sparkles, Star } from 'lucide-react';
 import { PlatformLogo } from './PlatformLogo';
 import {
   DAILY_ADHKAR,
@@ -47,6 +47,9 @@ export function AchievementsSection({
       : stars >= 50
         ? 'سفير القيم والآداب'
         : 'مستكشف المعرفة الصغير';
+
+  const filledBadgesCount =
+    stars >= 120 ? 5 : stars >= 75 ? 4 : stars >= 40 ? 3 : stars >= 15 ? 2 : 1;
 
   const displayName = childName.trim() || 'البطل الصغير';
 
@@ -116,14 +119,14 @@ export function AchievementsSection({
         </div>
 
         {/* Printable Hero Certificate */}
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 sm:p-7">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 sm:p-7 print:border-0 print:bg-white print:p-0">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center print:block">
             <div className="lg:col-span-4 space-y-3.5 no-print">
               <h3 className="font-display text-base font-bold text-slate-900">
                 خصص شهادة إنجاز طفلك
               </h3>
               <p className="text-sm leading-relaxed text-slate-600">
-                اكتب اسم الطفل ليظهر على الشهادة التفاعلية، ويمكنك طباعتها لتشجيعه في المنزل.
+                اكتب اسم الطفل ليظهر على الشهادة التفاعلية بمقاس <span className="font-semibold text-emerald-800">A4 أفقي</span>، ويمكنك طباعتها مباشرة لتشجيعه في المنزل.
               </p>
               <div>
                 <label
@@ -159,10 +162,10 @@ export function AchievementsSection({
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-slate-800 cursor-pointer"
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border-b-2 border-amber-700 bg-amber-500 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
                 >
                   <Printer className="h-4 w-4" aria-hidden="true" />
-                  طباعة الشهادة
+                  طباعة الشهادة (A4 أفقي)
                 </button>
               )}
               {!isSignedIn && (
@@ -173,38 +176,139 @@ export function AchievementsSection({
               )}
             </div>
 
-            <div className="lg:col-span-8 rounded-2xl border-2 border-emerald-700/20 bg-white p-6 sm:p-7 text-center">
-              <div className="mx-auto mb-3 flex justify-center">
-                <PlatformLogo size={64} />
-              </div>
+            {/* Child-Friendly Festive Certificate Canvas (A4 Landscape 297:210) */}
+            <div
+              style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+              className="certificate-a4-landscape lg:col-span-8 relative flex flex-col overflow-hidden rounded-3xl border-4 border-amber-300 bg-gradient-to-br from-amber-100/90 via-emerald-50 to-sky-100/90 p-2.5 sm:aspect-[297/210] sm:p-3.5 shadow-md print:shadow-none"
+            >
+              <div className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[20px] border-2 border-dashed border-emerald-500/45 bg-[#FFFDF7] px-5 py-4 sm:px-8 sm:py-5 text-center">
+                {/* Subtle Corner Decorative Stars */}
+                <Star
+                  className="pointer-events-none absolute right-4 top-4 h-5 w-5 fill-amber-300 text-amber-400 opacity-80"
+                  aria-hidden="true"
+                />
+                <Star
+                  className="pointer-events-none absolute left-4 top-4 h-5 w-5 fill-sky-300 text-sky-400 opacity-80"
+                  aria-hidden="true"
+                />
+                <Sparkles
+                  className="pointer-events-none absolute bottom-4 right-5 h-5 w-5 text-emerald-400 opacity-75"
+                  aria-hidden="true"
+                />
+                <Sparkles
+                  className="pointer-events-none absolute bottom-4 left-5 h-5 w-5 text-amber-400 opacity-75"
+                  aria-hidden="true"
+                />
 
-              <p className="text-xs font-semibold text-emerald-800">
-                منصة رسائل إماراتية للأطفال · شهادة تقدير وتشجيع
-              </p>
+                {/* Top Header: Celebration Bunting + Platform Logo + Certificate Heading */}
+                <div>
+                  <svg
+                    viewBox="0 0 600 36"
+                    aria-hidden="true"
+                    className="pointer-events-none mx-auto -mt-3 mb-1 h-7 w-full max-w-lg"
+                    fill="none"
+                  >
+                    <path
+                      d="M10 4 Q300 26 590 4"
+                      stroke="#D97706"
+                      strokeWidth="2"
+                      strokeDasharray="4 4"
+                    />
+                    <polygon points="55,9 85,12 66,30" fill="#10B981" />
+                    <polygon points="125,13 155,16 138,33" fill="#F59E0B" />
+                    <polygon points="195,16 225,17 209,35" fill="#0EA5E9" />
+                    <polygon points="285,17 315,17 300,35" fill="#F43F5E" />
+                    <polygon points="375,17 405,16 391,35" fill="#0EA5E9" />
+                    <polygon points="445,16 475,13 462,33" fill="#F59E0B" />
+                    <polygon points="515,12 545,9 534,30" fill="#10B981" />
+                  </svg>
 
-              <h4 className="mt-2.5 font-display text-xl font-bold text-slate-900 sm:text-2xl">
-                {displayName}
-              </h4>
+                  <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3.5">
+                    <div className="rounded-2xl border-2 border-amber-200 bg-white p-1 shadow-xs">
+                      <PlatformLogo size={48} />
+                    </div>
+                    <div className="text-center sm:text-right">
+                      <p className="text-[11px] font-bold text-amber-700">
+                        منصة رسائل إماراتية للأطفال · إصدار 2026
+                      </p>
+                      <h4 className="font-display text-lg font-extrabold text-emerald-900 sm:text-xl leading-tight">
+                        شهادة تقدير وتشجيع للبطل المبدع
+                      </h4>
+                    </div>
+                  </div>
+                </div>
 
-              <p className="mx-auto mt-2.5 max-w-lg text-sm leading-relaxed text-slate-600">
-                تقديراً لمشاركته المتميزة في أنشطة الآداب النبوية، السيرة العطرة، تدبر قصار السور، ومتابعة الأذكار اليومية، وحصوله على وسام:
-              </p>
+                {/* Middle Spotlight: Child Name Ribbon + Appreciation Message */}
+                <div className="my-2 space-y-2.5">
+                  <div className="mx-auto max-w-md rounded-2xl border-2 border-amber-300 bg-gradient-to-l from-amber-50 via-white to-emerald-50 px-5 py-2.5 shadow-xs">
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      تُمنح هذه الشهادة بكل فخر إلى
+                    </p>
+                    <div className="mt-0.5 flex items-center justify-center gap-2.5">
+                      <Star
+                        className="h-5 w-5 shrink-0 fill-amber-400 text-amber-500"
+                        aria-hidden="true"
+                      />
+                      <span className="font-display text-2xl font-extrabold text-emerald-950 sm:text-[1.75rem]">
+                        {displayName}
+                      </span>
+                      <Star
+                        className="h-5 w-5 shrink-0 fill-amber-400 text-amber-500"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
 
-              <p className="mt-2.5 font-display text-base font-bold text-emerald-800">
-                {rankTitle}
-              </p>
+                  <p className="mx-auto max-w-xl text-xs sm:text-sm leading-relaxed text-slate-700">
+                    تقديراً لمشاركته الرائعة في مغامرات الآداب النبوية، السيرة العطرة، تدبر قصار السور، والمواظبة على الأذكار اليومية.
+                  </p>
+                </div>
 
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-6 border-t border-slate-100 pt-4 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 tabular-nums">
-                  <Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
-                  {stars} نجمة مكتسبة
-                </span>
-                <span aria-hidden="true">·</span>
-                <span className="tabular-nums">
-                  {completedIds.length} نشاطاً مكتملًا
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>مشروع رسائل إماراتية</span>
+                {/* Landscape Dual Row: Medal Crest + 5-Star Celebration */}
+                <div className="mx-auto grid w-full max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <div className="flex items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-amber-400 bg-amber-300 text-amber-950 shadow-xs">
+                      <Award className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-semibold text-emerald-800">
+                        الوسام المستحق
+                      </p>
+                      <p className="font-display text-sm font-extrabold text-emerald-950">
+                        {rankTitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center rounded-2xl border border-amber-200 bg-amber-50/60 px-3.5 py-2.5">
+                    <div
+                      className="flex items-center justify-center gap-1"
+                      aria-label={`${filledBadgesCount} من 5 نجوم تميز`}
+                    >
+                      {[1, 2, 3, 4, 5].map((index) => (
+                        <Star
+                          key={index}
+                          className={`h-5 w-5 ${
+                            index <= filledBadgesCount
+                              ? 'fill-amber-400 text-amber-500'
+                              : 'fill-slate-100 text-slate-300'
+                          }`}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] font-bold text-amber-900 tabular-nums">
+                      {stars} نجمة مكتسبة · {completedIds.length} نشاطاً مكتملًا
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom Official Seal Strip */}
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t-2 border-dashed border-amber-200 pt-2.5 text-[11px] font-semibold text-slate-600">
+                  <span className="text-emerald-900">موسم السلاسل التعليمية 2026</span>
+                  <span aria-hidden="true" className="text-amber-400">★</span>
+                  <span className="text-sky-900">ختم مشروع رسائل إماراتية للأطفال</span>
+                </div>
               </div>
             </div>
           </div>

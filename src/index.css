@@ -37,11 +37,44 @@
   }
 }
 
+@page {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
 @media print {
-  header, aside, nav, footer, .no-print {
+  html,
+  body {
+    width: 100%;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  header,
+  aside,
+  nav,
+  footer,
+  .no-print {
     display: none !important;
   }
-  body {
+
+  #achievements,
+  #achievements > div {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
     background: #ffffff !important;
+  }
+
+  .certificate-a4-landscape {
+    width: 277mm !important;
+    height: 190mm !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }

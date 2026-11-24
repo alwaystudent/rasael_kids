@@ -68,8 +68,25 @@ interface SavedProgress {
 }
 
 const USER_CACHE_PREFIX = 'rasael_user_cache_v1_';
+const WELCOME_SEEN_PREFIX = 'rasael_welcome_seen_v1_';
 const BROWSE_STATE_KEY = 'rasael_browse_state_v1';
 const LEGACY_KEYS = ['rasael_children_platform_v1', 'rasael_children_platform_v2'];
+
+function hasSeenFirstWelcome(uid: string): boolean {
+  try {
+    return localStorage.getItem(`${WELCOME_SEEN_PREFIX}${sanitizeId(uid)}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markFirstWelcomeSeen(uid: string) {
+  try {
+    localStorage.setItem(`${WELCOME_SEEN_PREFIX}${sanitizeId(uid)}`, '1');
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 const DEFAULT_PROGRESS: SavedProgress = {
   childName: '',
@@ -440,8 +457,13 @@ export default function App() {
     try {
       const cred = await signInWithPopup(auth, googleProvider);
       soundFX.playCelebration();
-      setWelcomeMemberName(cred.user.displayName || 'بطلنا');
-      setWelcomeBannerVisible(true);
+      if (!hasSeenFirstWelcome(cred.user.uid)) {
+        setWelcomeMemberName(cred.user.displayName || 'بطلنا');
+        setWelcomeBannerVisible(true);
+        markFirstWelcomeSeen(cred.user.uid);
+      } else {
+        setWelcomeBannerVisible(false);
+      }
     } catch (error) {
       console.error('Google sign-in failed:', error);
       setAuthNotice('لم تكتمل عملية تسجيل الدخول عبر Google. يمكنك المحاولة مرة أخرى.');
@@ -730,6 +752,7 @@ export default function App() {
           onStartActivity={() => handleLaunchActivity(activeEngine)}
           onNavigate={(id) => setActiveSection(id)}
           onOpenEmailAuth={() => openEmailAuth()}
+          onSignOut={handleSignOut}
         />
 
         {/* Full-Width Fluid Main Content Area */}
@@ -752,14 +775,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border-2 border-emerald-200 bg-white px-5 py-4 shadow-sm shadow-emerald-900/5">
-                      <h1 className="font-sans text-base font-normal leading-[1.9] text-slate-800 sm:text-[1.05rem]">
-                        <span className="font-medium text-emerald-800">مغامرات تفاعلية ممتعة</span> من سلاسل قناة{' '}
-                        <span className="font-medium text-amber-800">رسائل إماراتية للأطفال</span>، تجمع بين القصص التربوية والألعاب التعليمية المبسطة لتغرس الآداب النبوية وحب المعرفة في نفوس الصغار بأسلوب هادئ ومشوّق.
-                      </h1>
-                    </div>
-
-                    {/* Prominent Email Sign-In Callout Card */}
+                    {/* Prominent Email Sign-In Callout Card (Above Platform Intro) */}
                     {!authUser ? (
                       <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-l from-amber-50 via-white to-emerald-50/70 p-4 shadow-sm space-y-3">
                         <div className="flex items-start gap-2.5">
@@ -802,7 +818,7 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                    ) : (
+                    ) : welcomeBannerVisible ? (
                       <WelcomeMemberBanner
                         visible={welcomeBannerVisible}
                         memberName={
@@ -813,7 +829,22 @@ export default function App() {
                         }
                         onDismiss={() => setWelcomeBannerVisible(false)}
                       />
+                    ) : (
+                      <p className="text-sm sm:text-[15px] font-semibold leading-relaxed text-emerald-900">
+                        أهلاً وسهلاً بك يا{' '}
+                        <span className="font-bold text-amber-700">
+                          {progress.childName || authUser.displayName || 'بطلنا'}
+                        </span>
+                        ، يسعدنا استمرار رحلتك الممتعة في المنصة!
+                      </p>
                     )}
+
+                    <div className="rounded-2xl border-2 border-emerald-200 bg-white px-5 py-4 shadow-sm shadow-emerald-900/5">
+                      <h1 className="font-sans text-base font-normal leading-[1.9] text-slate-800 sm:text-[1.05rem]">
+                        <span className="font-medium text-emerald-800">مغامرات تفاعلية ممتعة</span> من سلاسل قناة{' '}
+                        <span className="font-medium text-amber-800">رسائل إماراتية للأطفال</span>، تجمع بين القصص التربوية والألعاب التعليمية المبسطة لتغرس الآداب النبوية وحب المعرفة في نفوس الصغار بأسلوب هادئ ومشوّق.
+                      </h1>
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-3 pt-1">
                       <button
@@ -1059,8 +1090,17 @@ export default function App() {
             onClose={() => setEmailAuthOpen(false)}
             onGoogleSignIn={handleSignInWithGoogle}
             onRegistrationComplete={(memberName) => {
-              setWelcomeMemberName(memberName);
-              setWelcomeBannerVisible(true);
+              const uid = auth.currentUser?.uid;
+              if (uid && !hasSeenFirstWelcome(uid)) {
+                setWelcomeMemberName(memberName);
+                setWelcomeBannerVisible(true);
+                markFirstWelcomeSeen(uid);
+              } else if (!uid) {
+                setWelcomeMemberName(memberName);
+                setWelcomeBannerVisible(true);
+              } else {
+                setWelcomeBannerVisible(false);
+              }
             }}
             isGoogleLoading={isAuthLoading}
             promptReason={authPromptReason}

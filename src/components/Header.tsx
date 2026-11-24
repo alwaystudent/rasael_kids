@@ -41,6 +41,7 @@ interface SidebarNavProps {
   onStartActivity: () => void;
   onNavigate: (sectionId: string) => void;
   onOpenEmailAuth: () => void;
+  onSignOut: () => void;
 }
 
 const NAV_ITEMS = [
@@ -122,11 +123,12 @@ export function TopHeaderBar({
             <button
               type="button"
               onClick={onSignOut}
-              className="hidden sm:inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 whitespace-nowrap shrink-0 cursor-pointer"
               title="تسجيل الخروج"
+              aria-label="تسجيل الخروج"
             >
-              <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>خروج</span>
+              <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
+              <span>تسجيل الخروج</span>
             </button>
           )}
 
@@ -188,6 +190,7 @@ export function SidebarNav({
   onStartActivity,
   onNavigate,
   onOpenEmailAuth,
+  onSignOut,
 }: SidebarNavProps) {
   const handleItemClick = (id: string) => {
     onCloseMobile();
@@ -263,7 +266,7 @@ export function SidebarNav({
 
       {/* Bottom Controls: Auth Prompt or Star Summary + Sound Toggle + Primary CTA */}
       <div className="space-y-3 border-t border-slate-100 pt-4">
-        {!isSignedIn && (
+        {!isSignedIn ? (
           <button
             type="button"
             onClick={() => {
@@ -274,6 +277,18 @@ export function SidebarNav({
           >
             <Mail className="h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
             <span>سجّل بالبريد لحفظ نجومك</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              onCloseMobile();
+              onSignOut();
+            }}
+            className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3 py-2 text-xs font-bold text-rose-800 transition-colors hover:bg-rose-100 cursor-pointer"
+          >
+            <LogOut className="h-3.5 w-3.5 text-rose-700" aria-hidden="true" />
+            <span>تسجيل الخروج</span>
           </button>
         )}
 
