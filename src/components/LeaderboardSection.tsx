@@ -4,10 +4,13 @@ import {
   Check,
   Cloud,
   Crown,
+  Lock,
   LogIn,
   LogOut,
+  Mail,
   Medal,
   Plus,
+  RefreshCw,
   Star,
   UserCheck,
 } from 'lucide-react';
@@ -34,11 +37,16 @@ interface LeaderboardSectionProps {
   onAddFamilyMember: (name: string) => void;
   onSelectActiveProfile: (entryId: string) => void;
   isSignedIn: boolean;
+  isEmailVerified: boolean;
   isAuthLoading: boolean;
   authDisplayLabel: string;
   authNotice: string | null;
+  onOpenEmailAuth: (reason?: string) => void;
   onSignInWithGoogle: () => void;
   onSignOut: () => void;
+  onRefreshLeaderboard: () => void;
+  isRefreshing: boolean;
+  refreshCooldownSeconds: number;
 }
 
 function getRankTitle(stars: number): string {
@@ -57,11 +65,16 @@ export function LeaderboardSection({
   onAddFamilyMember,
   onSelectActiveProfile,
   isSignedIn,
+  isEmailVerified,
   isAuthLoading,
   authDisplayLabel,
   authNotice,
+  onOpenEmailAuth,
   onSignInWithGoogle,
   onSignOut,
+  onRefreshLeaderboard,
+  isRefreshing,
+  refreshCooldownSeconds,
 }: LeaderboardSectionProps) {
   const [nameInput, setNameInput] = useState(childName);
   const [nameSaved, setNameSaved] = useState(false);
@@ -73,29 +86,38 @@ export function LeaderboardSection({
 
   const displayName = childName.trim() || 'البطل الصغير (أنت)';
 
-  const combinedEntries: LeaderboardEntry[] = [
-    {
-      id: 'current-learner',
-      name: displayName,
-      stars: currentStars,
-      completedCount: currentCompletedCount,
-      isCurrentUser: true,
-      isCloud: isSignedIn,
-    },
-    ...familyPeers,
-  ].sort((a, b) => {
+  const combinedEntries: LeaderboardEntry[] = (
+    isSignedIn
+      ? [
+          {
+            id: 'current-learner',
+            name: displayName,
+            stars: currentStars,
+            completedCount: currentCompletedCount,
+            isCurrentUser: true,
+            isCloud: isEmailVerified,
+          },
+          ...familyPeers,
+        ]
+      : [...familyPeers]
+  ).sort((a, b) => {
     if (b.stars !== a.stars) return b.stars - a.stars;
     return b.completedCount - a.completedCount;
   });
 
-  const currentRank =
-    combinedEntries.findIndex((entry) => entry.isCurrentUser) + 1;
+  const currentRank = isSignedIn
+    ? combinedEntries.findIndex((entry) => entry.isCurrentUser) + 1
+    : 0;
 
   const topThree = combinedEntries.slice(0, 3);
   const cloudCount = combinedEntries.filter((e) => e.isCloud).length;
 
   const handleSaveName = (e: FormEvent) => {
     e.preventDefault();
+    if (!isSignedIn) {
+      onOpenEmailAuth('سجّل دخولك أولاً بالبريد الإلكتروني لتثبيت اسمك في لوحة الشرف.');
+      return;
+    }
     const cleaned = nameInput.trim();
     onChangeChildName(cleaned);
     onCommitChildName(cleaned);
@@ -106,6 +128,10 @@ export function LeaderboardSection({
 
   const handleAddMember = (e: FormEvent) => {
     e.preventDefault();
+    if (!isSignedIn) {
+      onOpenEmailAuth('سجّل دخولك أولاً لتتمكن من إضافة متنافسين جدد إلى لوحة الشرف.');
+      return;
+    }
     const cleaned = newSiblingName.trim();
     if (!cleaned) return;
     onAddFamilyMember(cleaned);
@@ -120,22 +146,28 @@ export function LeaderboardSection({
       className="border-t border-slate-200 bg-[#F7F9FC] py-10 sm:py-12 no-print"
     >
       <div className="w-full px-5 sm:px-8 lg:px-10">
-        {/* Cloud Cross-Device Sync Status Strip */}
-        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-sky-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Prominent Auth & Lightweight Sync Banner */}
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border-2 border-amber-200 bg-white p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
-              <Cloud className="h-5 w-5" aria-hidden="true" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+              {isSignedIn ? (
+                <Cloud className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+              ) : (
+                <Lock className="h-5 w-5" aria-hidden="true" />
+              )}
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               <p className="text-sm font-bold text-slate-900">
                 {isSignedIn
-                  ? `المزامنة السحابية مفعّلة · يظهر اسمك ومنافسوك على جميع الأجهزة (${authDisplayLabel})`
-                  : 'لوحة الشرف المشتركة عبر جميع الأجهزة'}
+                  ? `أهلاً بك يا بطل (${authDisplayLabel})`
+                  : 'سجّل دخولك الآن بالبريد الإلكتروني لتخليد اسمك وحفظ نجومك في لوحة الشرف!'}
               </p>
               <p className="text-xs text-slate-600 leading-relaxed">
                 {isSignedIn
-                  ? `أسماء ونجوم جميع الأبطال (${cloudCount} مشاركاً متزامناً) تتحدّث مباشرة عبر الأجهزة في لوحة الشرف وتحدي الأصدقاء.`
-                  : 'تظهر هنا أسماء الأصدقاء والمتنافسين من كل الأجهزة مباشرة؛ سجّل الدخول بحساب Google لنشر اسمك وإضافة متنافسين جدد للجميع.'}
+                  ? isEmailVerified
+                    ? `تُحفظ بياناتك بخفة على المتصفح وتُزامن بذكاء دون ضغط على الخادم (${cloudCount} متنافساً في القائمة).`
+                    : 'حسابك مسجّل ويحفظ تقدمك بأمان؛ فعّل رابط البريد الإلكتروني لتظهر نتائجك لباقي الأجهزة.'
+                  : 'تصفح الأنشطة متاح للجميع حتى بدون إنترنت، بينما يتطلب احتساب النجوم وحفظ التقدم وتسجيل اسمك في لوحة الشرف تسجيل الدخول أولاً.'}
               </p>
               {authNotice && (
                 <p className="text-xs font-semibold text-amber-800 pt-0.5" role="status">
@@ -145,42 +177,74 @@ export function LeaderboardSection({
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={isRefreshing || refreshCooldownSeconds > 0}
+              onClick={() => {
+                soundFX.playClick();
+                onRefreshLeaderboard();
+              }}
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60 whitespace-nowrap cursor-pointer"
+              title="تحديث لوحة الشرف يدوياً"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+              />
+              <span>
+                {refreshCooldownSeconds > 0
+                  ? `تحديث (${refreshCooldownSeconds}ث)`
+                  : 'تحديث القائمة'}
+              </span>
+            </button>
+
             {isSignedIn ? (
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 whitespace-nowrap cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 تسجيل الخروج
               </button>
             ) : (
-              <button
-                type="button"
-                disabled={isAuthLoading}
-                onClick={() => {
-                  soundFX.playClick();
-                  onSignInWithGoogle();
-                }}
-                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border-b-2 border-sky-900 bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-800 disabled:opacity-60 whitespace-nowrap cursor-pointer"
-              >
-                <LogIn className="h-4 w-4" aria-hidden="true" />
-                <span>
-                  {isAuthLoading
-                    ? 'جاري تسجيل الدخول...'
-                    : 'سجّل بحساب Google لنشر اسمك للجميع'}
-                </span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundFX.playClick();
+                    onOpenEmailAuth(
+                      'سجّل دخولك بالبريد الإلكتروني لتحفظ نجومك وتنضم إلى فرسان لوحة الشرف!'
+                    );
+                  }}
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border-b-2 border-emerald-900 bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 whitespace-nowrap cursor-pointer"
+                >
+                  <Mail className="h-4 w-4" aria-hidden="true" />
+                  <span>تسجيل الدخول بالبريد الإلكتروني</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isAuthLoading}
+                  onClick={() => {
+                    soundFX.playClick();
+                    onSignInWithGoogle();
+                  }}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3.5 py-2 text-xs font-semibold text-sky-900 hover:bg-sky-100 disabled:opacity-60 whitespace-nowrap cursor-pointer"
+                >
+                  <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{isAuthLoading ? 'جاري الدخول...' : 'حساب Google'}</span>
+                </button>
+              </>
             )}
           </div>
         </div>
 
-        {/* Harmonious Section Heading + Name Customization Bar */}
+        {/* Harmonious Section Heading + Gated Name Customization Bar */}
         <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-1.5 max-w-2xl">
             <p className="text-xs font-semibold text-amber-700">
-              المنافسة الإيجابية · متزامنة عبر الأجهزة
+              المنافسة الإيجابية · تسجيل الاسم والتقدم للمسجلين
             </p>
             <h2
               id="leaderboard-title"
@@ -189,7 +253,7 @@ export function LeaderboardSection({
               <span className="text-emerald-800">لوحة الشرف</span> — فرسان النجوم والمعرفة
             </h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              تعرّف على ترتيب الأبطال حسب النجوم المكتسبة، وخصّص اسمك ليظهر في القائمة على جميع الأجهزة ويتقدم مع كل نشاط تنجزه.
+              تعرّف على ترتيب الأبطال حسب النجوم المكتسبة، وسجّل دخولك لتخصيص اسمك وحفظ تقدمك في القائمة.
             </p>
           </div>
 
@@ -202,19 +266,24 @@ export function LeaderboardSection({
                 htmlFor="leaderboard-name-input"
                 className="mb-1 block text-xs font-semibold text-slate-700"
               >
-                تخصيص اسمك في لوحة الشرف
+                {isSignedIn
+                  ? 'تخصيص اسمك في لوحة الشرف'
+                  : 'تخصيص الاسم (يتطلب تسجيل الدخول)'}
               </label>
               <input
                 id="leaderboard-name-input"
                 type="text"
                 maxLength={32}
-                value={nameInput}
+                disabled={!isSignedIn}
+                value={isSignedIn ? nameInput : ''}
                 onChange={(e) => {
                   setNameInput(e.target.value);
                   onChangeChildName(e.target.value);
                 }}
-                placeholder="اكتب اسمك (مثال: زايد)"
-                className="min-h-[38px] w-44 max-w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                placeholder={
+                  isSignedIn ? 'اكتب اسمك (مثال: زايد)' : 'سجّل الدخول لكتابة اسمك'
+                }
+                className="min-h-[38px] w-48 max-w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600 disabled:cursor-not-allowed disabled:opacity-65"
               />
             </div>
 
@@ -222,7 +291,12 @@ export function LeaderboardSection({
               type="submit"
               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-b-2 border-emerald-900 bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
             >
-              {nameSaved ? (
+              {!isSignedIn ? (
+                <>
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                  دخول للتسجيل
+                </>
+              ) : nameSaved ? (
                 <>
                   <Check className="h-3.5 w-3.5" aria-hidden="true" />
                   تم الحفظ
@@ -238,85 +312,89 @@ export function LeaderboardSection({
         </div>
 
         {/* Top 3 Podium Cards */}
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {topThree.map((entry, idx) => {
-            const position = idx + 1;
-            const isFirst = position === 1;
-            const isSecond = position === 2;
+        {topThree.length > 0 && (
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {topThree.map((entry, idx) => {
+              const position = idx + 1;
+              const isFirst = position === 1;
+              const isSecond = position === 2;
 
-            return (
-              <div
-                key={entry.id}
-                className={`rounded-2xl border p-4 sm:p-5 transition-colors ${
-                  entry.isCurrentUser
-                    ? 'border-emerald-600 bg-emerald-50/60'
-                    : isFirst
-                      ? 'border-amber-300 bg-amber-50/40'
-                      : 'border-slate-200 bg-white'
-                }`}
-              >
-                <div className="mb-2.5 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs font-bold tabular-nums ${
-                        isFirst
-                          ? 'bg-amber-500 text-white'
-                          : isSecond
-                            ? 'bg-slate-700 text-white'
-                            : 'bg-amber-800 text-white'
-                      }`}
-                    >
-                      {isFirst ? (
-                        <Crown className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Medal className="h-4 w-4" aria-hidden="true" />
-                      )}
+              return (
+                <div
+                  key={entry.id}
+                  className={`rounded-2xl border p-4 sm:p-5 transition-colors ${
+                    entry.isCurrentUser
+                      ? 'border-emerald-600 bg-emerald-50/60'
+                      : isFirst
+                        ? 'border-amber-300 bg-amber-50/40'
+                        : 'border-slate-200 bg-white'
+                  }`}
+                >
+                  <div className="mb-2.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs font-bold tabular-nums ${
+                          isFirst
+                            ? 'bg-amber-500 text-white'
+                            : isSecond
+                              ? 'bg-slate-700 text-white'
+                              : 'bg-amber-800 text-white'
+                        }`}
+                      >
+                        {isFirst ? (
+                          <Crown className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Medal className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-slate-600 tabular-nums">
+                        المركز {position}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-600 tabular-nums">
-                      المركز {position}
-                    </span>
+
+                    {entry.isCurrentUser ? (
+                      <span className="text-xs font-bold text-emerald-800">
+                        ملفك الحالي
+                      </span>
+                    ) : entry.isCloud ? (
+                      <span className="text-xs font-semibold text-sky-700">
+                        عبر الأجهزة
+                      </span>
+                    ) : null}
                   </div>
 
-                  {entry.isCurrentUser ? (
-                    <span className="text-xs font-bold text-emerald-800">
-                      ملفك الحالي
-                    </span>
-                  ) : entry.isCloud ? (
-                    <span className="text-xs font-semibold text-sky-700">
-                      عبر الأجهزة
-                    </span>
-                  ) : null}
-                </div>
+                  <h3 className="font-display text-base font-bold text-slate-900 truncate">
+                    {entry.name}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {getRankTitle(entry.stars)} ·{' '}
+                    <span className="tabular-nums">{entry.completedCount} نشاطاً</span>
+                  </p>
 
-                <h3 className="font-display text-base font-bold text-slate-900 truncate">
-                  {entry.name}
-                </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {getRankTitle(entry.stars)} ·{' '}
-                  <span className="tabular-nums">{entry.completedCount} نشاطاً</span>
-                </p>
-
-                <div className="mt-3 flex items-center justify-between border-t border-slate-200/70 pt-2.5">
-                  <span className="text-xs font-medium text-slate-600">مجموع النجوم</span>
-                  <span className="inline-flex items-center gap-1 font-mono text-lg font-bold text-amber-700 tabular-nums">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
-                    {entry.stars}
-                  </span>
+                  <div className="mt-3 flex items-center justify-between border-t border-slate-200/70 pt-2.5">
+                    <span className="text-xs font-medium text-slate-600">مجموع النجوم</span>
+                    <span className="inline-flex items-center gap-1 font-mono text-lg font-bold text-amber-700 tabular-nums">
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
+                      {entry.stars}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Full Leaderboard Table + Add Family/Class Competitor */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
               <h3 className="font-display text-sm sm:text-base font-bold text-emerald-950">
-                ترتيب جميع المتعلمين المشاركين
+                ترتيب المتعلمين المسجلين
               </h3>
               <span className="text-xs font-semibold text-slate-600 tabular-nums">
-                ترتيبك الآن: #{currentRank} من {combinedEntries.length}
+                {isSignedIn
+                  ? `ترتيبك الآن: #${currentRank} من ${combinedEntries.length}`
+                  : `إجمالي المسجلين: ${combinedEntries.length}`}
               </span>
             </div>
 
@@ -371,9 +449,9 @@ export function LeaderboardSection({
                   ))}
                 </tbody>
               </table>
-              {combinedEntries.length <= 1 && (
-                <p className="border-t border-slate-100 bg-slate-50/50 px-5 py-3 text-xs text-slate-500">
-                  لا يوجد متنافسون مسجّلون بعد — خصّص اسمك وسجّل الدخول بحساب Google أو أضف أسماء الإخوة والأصدقاء ليظهروا هنا عبر جميع الأجهزة.
+              {combinedEntries.length === 0 && (
+                <p className="border-t border-slate-100 bg-slate-50/50 px-5 py-4 text-xs text-slate-600">
+                  لا يوجد متنافسون مسجّلون بعد — كن أول بطل يسجل دخوله بالبريد الإلكتروني ليظهر اسمه ونجومه في لوحة الشرف!
                 </p>
               )}
             </div>
@@ -388,7 +466,7 @@ export function LeaderboardSection({
                 </h3>
               </div>
               <p className="text-sm leading-relaxed text-slate-600">
-                يمكن للأم أو المعلم إضافة اسم أخ أو زميل ليتنافسوا معاً، وعند تسجيل الدخول يظهرون على جميع الأجهزة.
+                بعد تسجيل الدخول، يمكن للأم أو المعلم إضافة اسم أخ أو زميل ليتنافسوا معاً ويظهروا على جميع الأجهزة.
               </p>
 
               <form onSubmit={handleAddMember} className="space-y-2 pt-1">
@@ -403,23 +481,33 @@ export function LeaderboardSection({
                     id="add-competitor-input"
                     type="text"
                     maxLength={28}
-                    value={newSiblingName}
+                    disabled={!isSignedIn}
+                    value={isSignedIn ? newSiblingName : ''}
                     onChange={(e) => setNewSiblingName(e.target.value)}
-                    placeholder="مثال: سارة"
-                    className="min-h-[38px] w-0 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-600 focus:bg-white focus:outline-none"
+                    placeholder={isSignedIn ? 'مثال: سارة' : 'يتطلب تسجيل الدخول'}
+                    className="min-h-[38px] w-0 min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-600 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-65"
                   />
                   <button
                     type="submit"
                     className="inline-flex min-h-[38px] items-center gap-1 rounded-xl border-b-2 border-sky-900 bg-sky-700 px-3 text-xs font-semibold text-white hover:bg-sky-800 whitespace-nowrap shrink-0 cursor-pointer"
                   >
-                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                    إضافة
+                    {isSignedIn ? (
+                      <>
+                        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                        إضافة
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                        دخول
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
             </div>
 
-            {familyPeers.some((p) => !p.isPeer) && (
+            {isSignedIn && familyPeers.some((p) => !p.isPeer) && (
               <div className="border-t border-slate-100 pt-3">
                 <p className="mb-2 text-xs font-semibold text-slate-500">
                   تبديل اللاعب النشط:

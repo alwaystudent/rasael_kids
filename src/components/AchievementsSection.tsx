@@ -1,4 +1,4 @@
-import { Printer, RotateCcw, Star } from 'lucide-react';
+import { Lock, Mail, Printer, RotateCcw, Star } from 'lucide-react';
 import { PlatformLogo } from './PlatformLogo';
 import {
   DAILY_ADHKAR,
@@ -14,6 +14,8 @@ interface AchievementsSectionProps {
   completedIds: string[];
   adhkarProgress: Record<string, number>;
   onResetProgress: () => void;
+  isSignedIn: boolean;
+  onOpenEmailAuth: (reason?: string) => void;
 }
 
 export function AchievementsSection({
@@ -23,6 +25,8 @@ export function AchievementsSection({
   completedIds,
   adhkarProgress,
   onResetProgress,
+  isSignedIn,
+  onOpenEmailAuth,
 }: AchievementsSectionProps) {
   const etiquetteDone = ETIQUETTE_SCENARIOS.filter((i) =>
     completedIds.includes(i.id)
@@ -56,7 +60,7 @@ export function AchievementsSection({
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4 no-print">
           <div className="space-y-1.5 max-w-2xl">
             <p className="text-xs font-semibold text-emerald-800">
-              سجل الإنجاز الشخصي · محفوظ تلقائياً على جهازك
+              سجل الإنجاز الشخصي · يُحفظ لحسابك بعد تسجيل الدخول
             </p>
             <h2
               id="achievements-title"
@@ -131,22 +135,42 @@ export function AchievementsSection({
                 <input
                   id="child-name-input"
                   type="text"
-                  maxLength={40}
-                  value={childName}
+                  maxLength={32}
+                  disabled={!isSignedIn}
+                  value={isSignedIn ? childName : ''}
                   onChange={(e) => onChangeChildName(e.target.value)}
-                  placeholder="مثال: زايد أو مريم"
-                  className="min-h-[40px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  placeholder={isSignedIn ? 'مثال: زايد أو مريم' : 'سجّل دخولك أولاً لتسجيل الاسم'}
+                  className="min-h-[40px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-70"
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-slate-800 cursor-pointer"
-              >
-                <Printer className="h-4 w-4" aria-hidden="true" />
-                طباعة الشهادة
-              </button>
+              {!isSignedIn ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenEmailAuth('سجّل دخولك بالبريد الإلكتروني لحفظ نجومك وتخصيص شهادتك باسمك!')
+                  }
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border-b-2 border-emerald-900 bg-emerald-700 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-emerald-800 cursor-pointer"
+                >
+                  <Mail className="h-4 w-4" aria-hidden="true" />
+                  <span>تسجيل الدخول بالبريد</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-slate-800 cursor-pointer"
+                >
+                  <Printer className="h-4 w-4" aria-hidden="true" />
+                  طباعة الشهادة
+                </button>
+              )}
+              {!isSignedIn && (
+                <p className="inline-flex items-center gap-1.5 text-xs text-amber-800">
+                  <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>يتطلب حفظ التقدم وتسجيل الاسم تسجيل الدخول أولاً.</span>
+                </p>
+              )}
             </div>
 
             <div className="lg:col-span-8 rounded-2xl border-2 border-emerald-700/20 bg-white p-6 sm:p-7 text-center">

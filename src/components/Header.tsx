@@ -4,6 +4,8 @@ import {
   Flame,
   Home,
   Layers,
+  LogOut,
+  Mail,
   Menu,
   Newspaper,
   Star,
@@ -13,26 +15,32 @@ import {
   X,
 } from 'lucide-react';
 import { PlatformLogo } from './PlatformLogo';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface TopHeaderBarProps {
   activeSection: string;
   stars: number;
   isMuted: boolean;
+  isSignedIn: boolean;
   onToggleMute: () => void;
   onStartActivity: () => void;
   onOpenMobileMenu: () => void;
   onNavigate: (sectionId: string) => void;
+  onOpenEmailAuth: () => void;
+  onSignOut: () => void;
 }
 
 interface SidebarNavProps {
   activeSection: string;
   stars: number;
   isMuted: boolean;
+  isSignedIn: boolean;
   mobileOpen: boolean;
   onCloseMobile: () => void;
   onToggleMute: () => void;
   onStartActivity: () => void;
   onNavigate: (sectionId: string) => void;
+  onOpenEmailAuth: () => void;
 }
 
 const NAV_ITEMS = [
@@ -49,10 +57,13 @@ export function TopHeaderBar({
   activeSection,
   stars,
   isMuted,
+  isSignedIn,
   onToggleMute,
   onStartActivity,
   onOpenMobileMenu,
   onNavigate,
+  onOpenEmailAuth,
+  onSignOut,
 }: TopHeaderBarProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm no-print">
@@ -92,8 +103,33 @@ export function TopHeaderBar({
           </nav>
         </div>
 
-        {/* Left-aligned Quick Actions: Stars, Sound Toggle, Primary CTA */}
-        <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+        {/* Left-aligned Quick Actions: Install PWA, Email Sign-In, Stars, Sound, Start CTA */}
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden lg:block">
+            <PWAInstallButton />
+          </div>
+
+          {!isSignedIn ? (
+            <button
+              type="button"
+              onClick={onOpenEmailAuth}
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-950 hover:bg-amber-100 whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Mail className="h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+              <span>دخول بالبريد</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="hidden sm:inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 whitespace-nowrap shrink-0 cursor-pointer"
+              title="تسجيل الخروج"
+            >
+              <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>خروج</span>
+            </button>
+          )}
+
           <a
             href="#achievements"
             onClick={() => onNavigate('achievements')}
@@ -145,11 +181,13 @@ export function SidebarNav({
   activeSection,
   stars,
   isMuted,
+  isSignedIn,
   mobileOpen,
   onCloseMobile,
   onToggleMute,
   onStartActivity,
   onNavigate,
+  onOpenEmailAuth,
 }: SidebarNavProps) {
   const handleItemClick = (id: string) => {
     onCloseMobile();
@@ -223,8 +261,22 @@ export function SidebarNav({
         </nav>
       </div>
 
-      {/* Bottom Controls: Star Summary + Sound Toggle + Primary CTA */}
+      {/* Bottom Controls: Auth Prompt or Star Summary + Sound Toggle + Primary CTA */}
       <div className="space-y-3 border-t border-slate-100 pt-4">
+        {!isSignedIn && (
+          <button
+            type="button"
+            onClick={() => {
+              onCloseMobile();
+              onOpenEmailAuth();
+            }}
+            className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-950 hover:bg-amber-100 cursor-pointer"
+          >
+            <Mail className="h-3.5 w-3.5 text-amber-700" aria-hidden="true" />
+            <span>سجّل بالبريد لحفظ نجومك</span>
+          </button>
+        )}
+
         <div className="flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/50 px-3.5 py-2.5 text-xs">
           <span className="font-medium text-slate-700">نجومك المكتسبة</span>
           <span className="inline-flex items-center gap-1 font-mono text-sm font-bold text-amber-700 tabular-nums">

@@ -2,14 +2,13 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   limit,
-  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
   where,
-  type Unsubscribe,
 } from 'firebase/firestore';
 import {
   db,
@@ -50,56 +49,118 @@ export interface CloudUserProgress {
   activeCompetitorId: string;
 }
 
-export function subscribePublicCompetitors(
-  onData: (competitors: CloudCompetitor[]) => void,
-  onError?: (err: Error) => void
-): Unsubscribe {
+const PUBLIC_CACHE_KEY = 'rasael_public_competitors_cache_v1';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL to minimize Firebase reads
+const MAX_CACHED_COMPETITORS = 50;
+
+const knownExistingCompetitorIds = new Set<string>();
+const knownExistingUserIds = new Set<string>();
+
+interface CachedCompetitorsPayload {
+  fetchedAt: number;
+  items: CloudCompetitor[];
+}
+
+export function readCachedCompetitors(): CloudCompetitor[] {
+  try {
+    const raw = localStorage.getItem(PUBLIC_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as CachedCompetitorsPayload;
+    if (Array.isArray(parsed?.items)) {
+      return parsed.items.slice(0, MAX_CACHED_COMPETITORS);
+    }
+  } catch {
+    // Ignore storage parse failure
+  }
+  return [];
+}
+
+function writeCachedCompetitors(items: CloudCompetitor[]) {
+  try {
+    const compact = items.slice(0, MAX_CACHED_COMPETITORS);
+    const payload: CachedCompetitorsPayload = {
+      fetchedAt: Date.now(),
+      items: compact,
+    };
+    localStorage.setItem(PUBLIC_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage quota failure safely without harming device
+  }
+}
+
+function isCacheFresh(): boolean {
+  try {
+    const raw = localStorage.getItem(PUBLIC_CACHE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as CachedCompetitorsPayload;
+    return (
+      typeof parsed?.fetchedAt === 'number' &&
+      Date.now() - parsed.fetchedAt < CACHE_TTL_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Lightweight one-shot fetch with local TTL caching to avoid continuous server load
+ * and support seamless offline browsing.
+ */
+export async function fetchPublicCompetitors(
+  forceRefresh = false
+): Promise<CloudCompetitor[]> {
+  const cached = readCachedCompetitors();
+
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return cached;
+  }
+
+  if (!forceRefresh && cached.length > 0 && isCacheFresh()) {
+    return cached;
+  }
+
   const path = 'competitors';
   const q = query(
     collection(db, path),
     where('isPublic', '==', true),
-    limit(100)
+    limit(MAX_CACHED_COMPETITORS)
   );
 
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      const list: CloudCompetitor[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (
-          typeof data.id === 'string' &&
-          typeof data.name === 'string' &&
-          typeof data.stars === 'number' &&
-          typeof data.completedCount === 'number'
-        ) {
-          list.push({
-            id: data.id,
-            name: data.name,
-            stars: data.stars,
-            completedCount: data.completedCount,
-            lastDailyChallengeDate:
-              typeof data.lastDailyChallengeDate === 'string'
-                ? data.lastDailyChallengeDate
-                : '',
-            ownerUid: typeof data.ownerUid === 'string' ? data.ownerUid : '',
-            kind: data.kind === 'companion' ? 'companion' : 'primary',
-            isPublic: true,
-          });
-        }
-      });
-      onData(list);
-    },
-    (error) => {
-      try {
-        handleFirestoreError(error, OperationType.LIST, path);
-      } catch (wrapped) {
-        if (onError && wrapped instanceof Error) {
-          onError(wrapped);
-        }
+  try {
+    const snapshot = await getDocs(q);
+    const list: CloudCompetitor[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (
+        typeof data.id === 'string' &&
+        typeof data.name === 'string' &&
+        typeof data.stars === 'number' &&
+        typeof data.completedCount === 'number'
+      ) {
+        knownExistingCompetitorIds.add(data.id);
+        list.push({
+          id: data.id,
+          name: data.name,
+          stars: data.stars,
+          completedCount: data.completedCount,
+          lastDailyChallengeDate:
+            typeof data.lastDailyChallengeDate === 'string'
+              ? data.lastDailyChallengeDate
+              : '',
+          ownerUid: typeof data.ownerUid === 'string' ? data.ownerUid : '',
+          kind: data.kind === 'companion' ? 'companion' : 'primary',
+          isPublic: true,
+        });
       }
+    });
+    writeCachedCompetitors(list);
+    return list;
+  } catch (error) {
+    if (cached.length > 0) {
+      return cached;
     }
-  );
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
 }
 
 export async function upsertCompetitor(params: {
@@ -120,12 +181,17 @@ export async function upsertCompetitor(params: {
   const safeCount = clampCompletedCount(params.completedCount);
   const safeDate = sanitizeDateKey(params.lastDailyChallengeDate);
 
-  let exists = false;
-  try {
-    const snap = await getDoc(ref);
-    exists = snap.exists();
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+  let exists = knownExistingCompetitorIds.has(safeId);
+  if (!exists) {
+    try {
+      const snap = await getDoc(ref);
+      exists = snap.exists();
+      if (exists) {
+        knownExistingCompetitorIds.add(safeId);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
   }
 
   try {
@@ -150,6 +216,7 @@ export async function upsertCompetitor(params: {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      knownExistingCompetitorIds.add(safeId);
     }
   } catch (error) {
     handleFirestoreError(
@@ -157,24 +224,6 @@ export async function upsertCompetitor(params: {
       exists ? OperationType.UPDATE : OperationType.CREATE,
       path
     );
-  }
-}
-
-export async function renameCompetitor(
-  competitorId: string,
-  name: string
-): Promise<void> {
-  const safeId = sanitizeId(competitorId);
-  const path = `competitors/${safeId}`;
-  const ref = doc(db, 'competitors', safeId);
-
-  try {
-    await updateDoc(ref, {
-      name: sanitizeCompetitorName(name),
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
   }
 }
 
@@ -188,6 +237,7 @@ export async function fetchUserProgress(
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) return null;
+    knownExistingUserIds.add(safeUid);
     const data = snap.data();
     return {
       uid: safeUid,
@@ -227,12 +277,17 @@ export async function saveUserProgress(
   const safeDate = sanitizeDateKey(progress.dailyChallengeCompletedDate);
   const safeActiveId = sanitizeId(progress.activeCompetitorId || safeUid);
 
-  let exists = false;
-  try {
-    const snap = await getDoc(ref);
-    exists = snap.exists();
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+  let exists = knownExistingUserIds.has(safeUid);
+  if (!exists) {
+    try {
+      const snap = await getDoc(ref);
+      exists = snap.exists();
+      if (exists) {
+        knownExistingUserIds.add(safeUid);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
   }
 
   try {
@@ -258,6 +313,7 @@ export async function saveUserProgress(
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      knownExistingUserIds.add(safeUid);
     }
   } catch (error) {
     handleFirestoreError(
