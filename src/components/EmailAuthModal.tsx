@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification,
   signInWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
@@ -99,11 +98,6 @@ export function EmailAuthModal({
           password
         );
         await updateProfile(cred.user, { displayName: cleanName });
-        try {
-          await sendEmailVerification(cred.user);
-        } catch {
-          // Ignore verification email rate errors
-        }
         soundFX.playCelebration();
         setPassword('');
         setWelcomeName(cleanName);
@@ -174,7 +168,7 @@ export function EmailAuthModal({
               transition={{ delay: 0.15 }}
               className="rounded-2xl border-2 border-amber-300 bg-amber-50/80 p-4 text-xs sm:text-sm leading-relaxed text-amber-950 shadow-sm"
             >
-              أرسلنا رابط التفعيل إلى بريدك الإلكتروني <strong>{email}</strong>. افتح الرابط لتظهر نجومك واسمك في لوحة الشرف على جميع الأجهزة!
+              حسابك جاهز الآن! يمكنك بدء الأنشطة وجمع النجوم وتخليد اسمك في لوحة الشرف على جميع الأجهزة فوراً.
             </motion.div>
 
             <button

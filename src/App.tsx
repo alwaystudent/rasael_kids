@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import {
   onAuthStateChanged,
-  sendEmailVerification,
   signInWithPopup,
   signOut,
   type User,
@@ -41,7 +40,6 @@ import {
 import { SplashScreen } from './components/SplashScreen';
 import { EmailAuthModal } from './components/EmailAuthModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { DailyHintPopup } from './components/DailyHintPopup';
 import { WelcomeMemberBanner } from './components/WelcomeMemberBanner';
 import { soundFX } from './utils/soundEffects';
 import { auth, googleProvider } from './firebase/config';
@@ -248,9 +246,6 @@ export default function App() {
 
   const syncSnapshotToCloudNow = useCallback(
     async (user: User, snapshot: SavedProgress) => {
-      if (!user.emailVerified) {
-        return;
-      }
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         return;
       }
@@ -300,7 +295,6 @@ export default function App() {
   // Debounced cloud sync to avoid spamming Firebase servers
   const scheduleCloudSync = useCallback(
     (user: User, snapshot: SavedProgress) => {
-      if (!user.emailVerified) return;
       if (cloudSyncTimerRef.current) {
         window.clearTimeout(cloudSyncTimerRef.current);
       }
@@ -334,7 +328,7 @@ export default function App() {
 
       try {
         const cloudProgress =
-          user.emailVerified && (typeof navigator === 'undefined' || navigator.onLine)
+          typeof navigator === 'undefined' || navigator.onLine
             ? await fetchUserProgress(user.uid)
             : null;
 
@@ -377,14 +371,8 @@ export default function App() {
         setProgress(hydrated);
         writeUserCache(user.uid, hydrated);
 
-        if (user.emailVerified) {
-          await syncSnapshotToCloudNow(user, hydrated);
-          setAuthNotice(null);
-        } else {
-          setAuthNotice(
-            'تم تسجيل دخولك؛ فعّل رابط التأكيد في بريدك الإلكتروني لتظهر نتيجتك في لوحة الشرف عبر جميع الأجهزة.'
-          );
-        }
+        await syncSnapshotToCloudNow(user, hydrated);
+        setAuthNotice(null);
       } catch (err) {
         console.error('User hydration notice:', err);
       }
@@ -464,7 +452,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     soundFX.playClick();
-    if (cloudSyncTimerRef.current && authUser && authUser.emailVerified) {
+    if (cloudSyncTimerRef.current && authUser) {
       window.clearTimeout(cloudSyncTimerRef.current);
       await syncSnapshotToCloudNow(authUser, progressRef.current).catch(() => {});
     }
@@ -475,36 +463,6 @@ export default function App() {
       setAuthNotice(null);
     } catch (error) {
       console.error('Sign out failed:', error);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    if (!authUser) return;
-    try {
-      await sendEmailVerification(authUser);
-      setAuthNotice('تم إرسال رابط التفعيل إلى بريدك الإلكتروني. تفقّد البريد الوارد أو الرسائل غير المرغوب فيها.');
-    } catch {
-      setAuthNotice('تم إرسال رابط التفعيل مؤخراً؛ يرجى التحقق من بريدك الإلكتروني.');
-    }
-  };
-
-  const handleReloadVerification = async () => {
-    if (!authUser) return;
-    try {
-      await authUser.reload();
-      const refreshed = auth.currentUser;
-      setAuthUser(refreshed);
-      if (refreshed?.emailVerified) {
-        setAuthNotice(null);
-        await syncSnapshotToCloudNow(refreshed, progressRef.current);
-        const freshList = await fetchPublicCompetitors(true);
-        setCloudCompetitors(freshList);
-        soundFX.playCelebration();
-      } else {
-        setAuthNotice('لم يتم تأكيد البريد بعد؛ افتح رابط التفعيل في بريدك ثم اضغط تحديث الحالة.');
-      }
-    } catch (err) {
-      console.error('Reload verification error:', err);
     }
   };
 
@@ -660,22 +618,14 @@ export default function App() {
     };
     setProgress(next);
 
-    if (authUser.emailVerified) {
-      void syncSnapshotToCloudNow(authUser, next).then(() => {
-        void fetchPublicCompetitors(true).then(setCloudCompetitors).catch(() => {});
-      });
-    } else {
-      setAuthNotice('تم حفظ اسمك في حسابك؛ فعّل رابط بريدك الإلكتروني ليظهر لجميع الأجهزة.');
-    }
+    void syncSnapshotToCloudNow(authUser, next).then(() => {
+      void fetchPublicCompetitors(true).then(setCloudCompetitors).catch(() => {});
+    });
   };
 
   const handleAddFamilyMember = (name: string) => {
     if (!authUser) {
       openEmailAuth('سجّل دخولك أولاً لتتمكن من إضافة متنافسين جدد.');
-      return;
-    }
-    if (!authUser.emailVerified) {
-      setAuthNotice('يرجى تأكيد البريد الإلكتروني أو الدخول بحساب Google لإضافة متنافسين مشتركين.');
       return;
     }
 
@@ -714,16 +664,14 @@ export default function App() {
       };
       setProgress(next);
       lastSyncedDigestRef.current = '';
-      if (authUser.emailVerified) {
-        void saveUserProgress(authUser.uid, {
-          childName: next.childName,
-          stars: next.stars,
-          completedIds: next.completedIds,
-          adhkarProgress: next.adhkarProgress,
-          dailyChallengeCompletedDate: next.dailyChallengeCompletedDate || '',
-          activeCompetitorId: next.activeCompetitorId || authUser.uid,
-        });
-      }
+      void saveUserProgress(authUser.uid, {
+        childName: next.childName,
+        stars: next.stars,
+        completedIds: next.completedIds,
+        adhkarProgress: next.adhkarProgress,
+        dailyChallengeCompletedDate: next.dailyChallengeCompletedDate || '',
+        activeCompetitorId: next.activeCompetitorId || authUser.uid,
+      });
     });
   };
 
@@ -856,17 +804,14 @@ export default function App() {
                       </div>
                     ) : (
                       <WelcomeMemberBanner
-                        visible={welcomeBannerVisible || !authUser.emailVerified}
+                        visible={welcomeBannerVisible}
                         memberName={
                           welcomeMemberName ||
                           progress.childName ||
                           authUser.displayName ||
                           'بطلنا الجديد'
                         }
-                        isEmailVerified={Boolean(authUser.emailVerified)}
                         onDismiss={() => setWelcomeBannerVisible(false)}
-                        onReloadVerification={() => void handleReloadVerification()}
-                        onResendVerification={() => void handleResendVerification()}
                       />
                     )}
 
@@ -1071,7 +1016,6 @@ export default function App() {
               onAddFamilyMember={handleAddFamilyMember}
               onSelectActiveProfile={handleSelectActiveProfile}
               isSignedIn={Boolean(authUser)}
-              isEmailVerified={Boolean(authUser?.emailVerified)}
               isAuthLoading={isAuthLoading}
               authDisplayLabel={authUser?.displayName || authUser?.email || 'حسابك'}
               authNotice={authNotice}
@@ -1109,10 +1053,6 @@ export default function App() {
 
           <StarCelebrationBanner event={celebration} />
           <OfflineIndicator />
-          <DailyHintPopup
-            readyToShow={!showSplash}
-            onLaunchSeries={(seriesId) => handleLaunchActivity(seriesId)}
-          />
 
           <EmailAuthModal
             open={emailAuthOpen}

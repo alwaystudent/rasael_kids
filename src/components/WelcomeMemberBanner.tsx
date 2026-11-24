@@ -1,22 +1,16 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { CheckCircle2, MailCheck, Sparkles, Star, X } from 'lucide-react';
+import { CheckCircle2, Sparkles, Star, X } from 'lucide-react';
 
 interface WelcomeMemberBannerProps {
   visible: boolean;
   memberName: string;
-  isEmailVerified: boolean;
   onDismiss: () => void;
-  onReloadVerification: () => void;
-  onResendVerification: () => void;
 }
 
 export function WelcomeMemberBanner({
   visible,
   memberName,
-  isEmailVerified,
   onDismiss,
-  onReloadVerification,
-  onResendVerification,
 }: WelcomeMemberBannerProps) {
   const displayName = memberName.trim() || 'بطلنا الجديد';
 
@@ -67,37 +61,13 @@ export function WelcomeMemberBanner({
                 </h2>
 
                 <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
-                  {isEmailVerified
-                    ? 'حسابك مفعّل وجاهز الآن — اجمع النجوم من الأنشطة اليومية وسيتألق اسمك في لوحة الشرف.'
-                    : 'أرسلنا رابط التفعيل إلى بريدك الإلكتروني؛ افتح الرابط لتظهر نجومك وإنجازاتك مع أصدقائك في لوحة الشرف.'}
+                  حسابك جاهز ومفعّل مباشرة — اجمع النجوم من الأنشطة اليومية وسيتألق اسمك فوراً في لوحة الشرف على جميع الأجهزة.
                 </p>
 
-                {!isEmailVerified && (
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={onReloadVerification}
-                      className="inline-flex min-h-[34px] items-center gap-1.5 rounded-xl border-b-2 border-emerald-900 bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 cursor-pointer"
-                    >
-                      <MailCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                      تم التفعيل؟ حدّث الحالة الآن
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onResendVerification}
-                      className="min-h-[34px] rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-50 cursor-pointer"
-                    >
-                      إعادة إرسال رابط التفعيل
-                    </button>
-                  </div>
-                )}
-
-                {isEmailVerified && (
-                  <p className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
-                    <span>كل نشاط تكمله الآن يُضاف مباشرة إلى رصيد نجومك!</span>
-                  </p>
-                )}
+                <p className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
+                  <span>كل نشاط تكمله الآن يُضاف مباشرة إلى رصيد نجومك!</span>
+                </p>
               </div>
             </div>
 

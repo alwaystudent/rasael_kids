@@ -37,7 +37,6 @@ interface LeaderboardSectionProps {
   onAddFamilyMember: (name: string) => void;
   onSelectActiveProfile: (entryId: string) => void;
   isSignedIn: boolean;
-  isEmailVerified: boolean;
   isAuthLoading: boolean;
   authDisplayLabel: string;
   authNotice: string | null;
@@ -65,7 +64,6 @@ export function LeaderboardSection({
   onAddFamilyMember,
   onSelectActiveProfile,
   isSignedIn,
-  isEmailVerified,
   isAuthLoading,
   authDisplayLabel,
   authNotice,
@@ -95,7 +93,7 @@ export function LeaderboardSection({
             stars: currentStars,
             completedCount: currentCompletedCount,
             isCurrentUser: true,
-            isCloud: isEmailVerified,
+            isCloud: true,
           },
           ...familyPeers,
         ]
@@ -164,9 +162,7 @@ export function LeaderboardSection({
               </p>
               <p className="text-xs text-slate-600 leading-relaxed">
                 {isSignedIn
-                  ? isEmailVerified
-                    ? `تُحفظ بياناتك بخفة على المتصفح وتُزامن بذكاء دون ضغط على الخادم (${cloudCount} متنافساً في القائمة).`
-                    : 'حسابك مسجّل ويحفظ تقدمك بأمان؛ فعّل رابط البريد الإلكتروني لتظهر نتائجك لباقي الأجهزة.'
+                  ? `تُحفظ بياناتك بخفة على المتصفح وتُزامن بذكاء دون ضغط على الخادم (${cloudCount} متنافساً في القائمة).`
                   : 'تصفح الأنشطة متاح للجميع حتى بدون إنترنت، بينما يتطلب احتساب النجوم وحفظ التقدم وتسجيل اسمك في لوحة الشرف تسجيل الدخول أولاً.'}
               </p>
               {authNotice && (

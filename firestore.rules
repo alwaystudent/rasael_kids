@@ -20,15 +20,11 @@ service cloud.firestore {
     }
 
     function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isVerifiedUser() {
-      return isSignedIn() && request.auth.token.email_verified == true;
+      return request.auth != null && request.auth.uid != null;
     }
 
     function isOwner(userId) {
-      return isVerifiedUser() && request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidCompetitor(data, competitorId) {
@@ -131,18 +127,20 @@ service cloud.firestore {
     }
 
     match /competitors/{competitorId} {
-      allow get: if isValidId(competitorId) && existing().isPublic == true;
+      allow get: if isValidId(competitorId)
+        && ((resource == null && isSignedIn()) || (resource != null && existing().isPublic == true));
       allow list: if resource.data.isPublic == true;
 
-      allow create: if isVerifiedUser()
+      allow create: if isSignedIn()
         && isValidId(competitorId)
         && isValidCompetitor(incoming(), competitorId)
         && incoming().createdAt == request.time
         && incoming().updatedAt == request.time;
 
-      allow update: if isVerifiedUser()
+      allow update: if isSignedIn()
         && isValidId(competitorId)
         && isValidCompetitor(incoming(), competitorId)
+        && resource != null
         && existing().ownerUid == request.auth.uid
         && incoming().id == existing().id
         && incoming().ownerUid == existing().ownerUid
@@ -155,15 +153,16 @@ service cloud.firestore {
           || incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt'])
         );
 
-      allow delete: if isVerifiedUser()
+      allow delete: if isSignedIn()
         && isValidId(competitorId)
+        && resource != null
         && existing().ownerUid == request.auth.uid
         && existing().kind == 'companion';
     }
 
     match /users/{userId} {
       allow get: if isValidId(userId) && isOwner(userId);
-      allow list: if isVerifiedUser() && resource.data.uid == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
 
       allow create: if isValidId(userId)
         && isOwner(userId)
