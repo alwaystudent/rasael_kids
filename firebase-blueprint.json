@@ -1,0 +1,155 @@
+{
+  "entities": {
+    "Competitor": {
+      "title": "Competitor",
+      "description": "Public leaderboard and daily challenge participant entry shared across all users' devices without PII.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Document ID matching the competitor identifier.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Child or competitor display name shown on the Honor Roll and Friends Challenge.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "stars": {
+          "type": "integer",
+          "description": "Total stars earned by this competitor."
+        },
+        "completedCount": {
+          "type": "integer",
+          "description": "Number of completed educational activities."
+        },
+        "lastDailyChallengeDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD date string of the last completed daily challenge, or empty string if not completed today.",
+          "maxLength": 10,
+          "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user who owns and updates this competitor entry.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Whether this entry is the signed-in user's primary profile or an added companion/sibling/student.",
+          "enum": ["primary", "companion"]
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Marks the leaderboard entry as visible across all devices."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the competitor entry was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the competitor entry was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "stars",
+        "completedCount",
+        "lastDailyChallengeDate",
+        "ownerUid",
+        "kind",
+        "isPublic",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Private learner progress and active profile preferences for an authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "childName": {
+          "type": "string",
+          "description": "Display name of the currently active child profile.",
+          "maxLength": 32
+        },
+        "stars": {
+          "type": "integer",
+          "description": "Current stars total for the active child profile."
+        },
+        "completedIds": {
+          "type": "array",
+          "description": "List of completed activity IDs."
+        },
+        "adhkarProgress": {
+          "type": "object",
+          "description": "Map of dhikr IDs to repetition counts."
+        },
+        "dailyChallengeCompletedDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD date string of the last completed daily challenge, or empty string.",
+          "maxLength": 10,
+          "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+        },
+        "activeCompetitorId": {
+          "type": "string",
+          "description": "Competitor document ID currently bound to this user's active session.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the user progress record was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the user progress record was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "childName",
+        "stars",
+        "completedIds",
+        "adhkarProgress",
+        "dailyChallengeCompletedDate",
+        "activeCompetitorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/competitors/{competitorId}": {
+      "schema": {
+        "$ref": "#/entities/Competitor"
+      },
+      "description": "Shared public leaderboard competitors and friends visible across all users' devices."
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProgress"
+      },
+      "description": "Private user activity progress and active profile selection."
+    }
+  }
+}

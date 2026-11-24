@@ -1,0 +1,8 @@
+{
+  "name": "منصة رسائل إماراتية للأطفال",
+  "description": "منصة تعليمية وترفيهية تفاعلية للأطفال تحول سلاسل ومنشورات قناة رسائل إماراتية للأطفال إلى أنشطة ومسابقات وقصص تفاعلية مشوقة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
